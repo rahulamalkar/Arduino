@@ -1,0 +1,249 @@
+#include <NewPing.h>
+#include <LiquidCrystal.h>
+
+
+const unsigned int USTrigger= 8;
+const unsigned int USEcho =7;
+const unsigned int MaxDistance= 100;
+unsigned int distance; 
+unsigned int Time;
+
+
+const unsigned int motor=11;
+const unsigned int vib=12;
+const unsigned int buzz=6;
+
+
+unsigned int send_sms_flag=0;
+unsigned int moving=1;
+
+
+char str[70];
+char *test="$GPGGA";       
+char logitude[10];
+char latitude[10];
+int i,j,k;
+int temp;
+
+
+NewPing sonar(USTrigger, USEcho, MaxDistance);
+LiquidCrystal lcd(42, 44, 46, 48, 50, 52); //RS;EN;D0,D1;D2;D3
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+  Serial1.begin(9600);//gsm
+  Serial2.begin(9600);//gps
+  pinMode(motor,OUTPUT);
+  pinMode(vib,INPUT);
+  pinMode(buzz,OUTPUT);
+  digitalWrite(buzz,LOW);
+  digitalWrite(motor,LOW);
+  lcd.begin(16, 2);
+  lcd.clear();
+//  wellcome_display();
+  digitalWrite(motor,HIGH);
+}
+
+///////////////////////////////////////////////////////
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
+if(send_sms_flag==1)
+  {
+        
+  
+    if(temp==1)
+  {
+    for(i=18;i<27;i++)          //extract latitude from string
+    {
+     latitude[j]=str[i];
+     j++;
+    }
+    for(i=30;i<40;i++)          //extract longitude from string
+    {
+    logitude[k]=str[i];
+     k++;
+    }
+    send_sms();
+    temp=0;
+    i=0;
+    j=0;
+    k=0;
+  }
+  }
+  
+  if(moving==1)
+  {
+    scan();
+  }
+  
+  if(distance<40)
+  {
+    if(distance<15)
+    {
+    digitalWrite(motor,LOW);
+    moving=0;
+    lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Obstacle Detected");
+  lcd.setCursor(0,1);
+  lcd.print("Vehicle Stoped");
+    Serial.println("There's an obstacle!");
+    Serial.println("Vehicle Stoped!");
+    distance=100;
+  }
+  else
+  {
+  analogWrite(motor,128);
+  }
+  }
+  
+  if(digitalRead(vib)==HIGH)
+  {
+    
+      moving=0;
+    distance=100;
+    send_sms_flag=1;
+    digitalWrite(motor,LOW);
+    lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("ACCIDENT HAPPEND");
+  lcd.setCursor(0,1);
+  lcd.print("SENDING SMS");
+  delay(1000);
+  }
+  
+  
+
+}
+
+//////////////////////////////////////////////////////////
+
+void scan()                                         //This function determines the distance things are away from the ultrasonic sensor
+{
+  Serial.println("Scanning");
+  Time = sonar.ping(); 
+  distance = Time / US_ROUNDTRIP_CM;
+  delay(300);
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Distance:");
+  lcd.print(distance);
+  if(distance<40)
+  {
+  lcd.setCursor(0,1);
+  lcd.print("Speed:30KMpH");
+  }
+  else
+  {
+    lcd.setCursor(0,1);
+  lcd.print("Speed:60KMpH");
+  }
+  delay(500);
+}
+
+////////////////////////////////////////////////////////
+
+void serialEvent2()
+{
+  while (Serial2.available())            //Serial incomming data from GPS 
+  {
+    char inChar = (char)Serial2.read(); 
+    str[i]= inChar;                  //store incomming data from GPS to temparary string str[]
+     i++;
+     if (i < 7)                       
+     {
+      if(str[i-1] != test[i-1])         //check for right string
+      {
+        i=0; 
+      }
+     }
+    if(i >=60)
+    {
+     temp=1;
+    } 
+  }
+}
+
+/////////////////////////////////////////////////////
+
+void send_sms()
+{
+    digitalWrite(buzz,HIGH);
+  delay(300);
+  Serial.println("Sending SMS...");
+  Serial1.println('\r');
+  delay(300);
+  //Serial2.println("AT+CRSL=0\r");
+  //delay(100);
+  Serial1.println("AT+CMGF=1\r");
+  delay(300);
+  Serial1.println("AT+CMGS=\"+919844024240\"\r");
+  delay(300);
+  Serial1.println("vehicle in trouble\r");
+  Serial1.print("Latitude(N): ");             //enter latitude in msg
+  Serial1.println(latitude);                  //enter latitude value in msg
+  Serial1.print("Longitude(E): ");            //enter Longitude in Msg
+  Serial1.println(logitude);                  //enter longitude value in msg
+  delay(300);
+  Serial1.write(0x1A);
+  delay(300);
+  Serial.println("SMS Sent.");
+    digitalWrite(buzz,LOW);
+  while(1);
+}
+
+//////////////////////////////////////////////////////
+
+void wellcome_display()
+{
+lcd.clear();
+lcd.setCursor(0,0);
+lcd.print("  Project On: ");
+delay(1000);
+lcd.clear();
+lcd.setCursor(0,0);
+lcd.print(" Obstacle Avoid ");
+lcd.setCursor(0,1);
+lcd.print("Accident Alerting");
+delay(1500);
+lcd.clear();
+lcd.print(" Project Guide: ");
+delay(1500);
+lcd.setCursor(0,1);
+lcd.print("  xxxxxx");
+delay(1500);
+lcd.clear();
+lcd.setCursor(0,0);
+lcd.print("  Team Members  ");
+delay(1500);
+lcd.clear();
+lcd.setCursor(0,0);
+lcd.print("   xxxxxx");
+lcd.setCursor(0,1);
+lcd.print("   yyyyyy  ");
+delay(1500);
+lcd.clear();
+lcd.setCursor(0,0);
+lcd.print("   xxxxxx");
+lcd.setCursor(0,1);
+lcd.print("   yyyyyy  ");
+delay(1500);
+lcd.clear();
+lcd.setCursor(0,0);
+lcd.print("    xxxxxx");
+lcd.setCursor(0,1);
+lcd.print("   yyyyyy");
+delay(1500);
+lcd.clear();
+lcd.setCursor(0,0);
+lcd.print("   xxxxxx");
+lcd.setCursor(0,1);
+lcd.print("   yyyyyy");
+delay(1500);
+lcd.clear();
+}
+
+/////////////////////////////////////////////////////
