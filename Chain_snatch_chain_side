@@ -1,0 +1,132 @@
+#include <LiquidCrystal.h>
+ #include <VirtualWire.h> 
+
+
+LiquidCrystal lcd(7, 6, 5, 4, 3, 2); //7=RS;6=EN;5=D0,4=D1;3=D2;4=D3
+
+
+const unsigned int chain_pin=10;
+
+ 
+ void setup() 
+ { 
+  pinMode(chain_pin,INPUT);
+ // Initialize the IO and ISR 
+ lcd.begin(16, 2);
+ Serial.begin(9600);
+ lcd.clear();
+ wellcome_display();
+ delay(1000);
+ vw_setup(2000); // Bits per sec 
+ } 
+ 
+ 
+ 
+ 
+ 
+ void loop() 
+ { 
+ if(!digitalRead(chain_pin))
+ {
+ send_rf("CHAIN SNATCHED"); 
+ Serial.println("CHAIN SNATCHED");
+ chain_snatched();
+ delay(2000);
+ }
+ else
+ {
+  chain_safe();
+ }
+ }
+
+
+
+
+  
+ void send_rf (char *message) 
+ { 
+ vw_send((uint8_t *)message, strlen(message)); //TX =12; RX=11;
+ vw_wait_tx(); // Wait until the whole message is gone 
+ } 
+
+
+
+void wellcome_display()
+{
+  lcd.setCursor(0,0);
+lcd.print("  Project On: ");
+ delay(2000);
+ lcd.clear();
+   lcd.setCursor(0,0);
+ lcd.print("    SMART WAY");
+ lcd.setCursor(0,1);
+lcd.print("    TO AVOID");
+ delay(2000);
+lcd.clear();
+   lcd.setCursor(0,0);
+ lcd.print("     CHAIN");
+ lcd.setCursor(0,1);
+lcd.print("   SNATCHING");
+ delay(2000);
+
+ 
+ 
+ lcd.clear();
+ lcd.print("  Project Guide: ");
+delay(1000);
+lcd.setCursor(0,1);
+lcd.print("   xxxxxx ");
+ delay(2000);
+ lcd.clear();
+ lcd.setCursor(0,0);
+lcd.print(" Team Members  ");
+ delay(2000);
+  lcd.clear();
+ lcd.setCursor(0,0);
+lcd.print("    xxxxxx");
+lcd.setCursor(0,1);
+lcd.print("   yyyyyy");
+delay(2000);
+ lcd.clear();
+ lcd.setCursor(0,0);
+lcd.print("   xxxxxx");
+lcd.setCursor(0,1);
+lcd.print("   yyyyyy");
+delay(2000);
+ lcd.clear();
+ lcd.setCursor(0,0);
+lcd.print("    xxxxxx");
+lcd.setCursor(0,1);
+lcd.print("   yyyyyy");
+delay(2000);
+ lcd.clear();
+ lcd.setCursor(0,0);
+lcd.print("    xxxxxx");
+lcd.setCursor(0,1);
+lcd.print("   yyyyyy");
+delay(2000);
+}
+
+
+
+
+void chain_snatched()
+{
+  lcd.clear();
+  lcd.setCursor(0,0);
+lcd.print("THEFT OCCURED");
+lcd.setCursor(0,1);
+lcd.print("CHAIN SNATCHED");
+}
+
+
+
+void chain_safe()
+{
+  lcd.clear();
+   lcd.setCursor(0,0);
+ lcd.print("    CHAIN IS");
+ lcd.setCursor(0,1);
+lcd.print("      SAFE");
+ delay(2000);
+}
