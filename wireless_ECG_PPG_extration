@@ -1,0 +1,45 @@
+#include "TimerOne.h"
+unsigned int SAMPLE_NO;
+const unsigned int ECG_PIN = A0;
+const unsigned int PPG_PIN = A1;
+//unsigned int ECG_BUFF[300];
+//unsigned int PPG_BUFF[300];
+unsigned int ECG_VALUE = 0;
+unsigned int PPG_VALUE = 0;
+int m=0,m1=0,mp=0,mp1=0;
+
+void setup() {
+   //put your setup code here, to run once:
+  Timer1.initialize(4000);
+  Timer1.attachInterrupt(callback);
+  Serial.begin(9600);
+  SAMPLE_NO=0;
+
+}
+void loop()
+{
+  if ( SAMPLE_NO == 2500 )
+  {
+    Timer1.detachInterrupt();
+  }
+}
+
+
+
+void callback()
+{ 
+  Serial.print(SAMPLE_NO);
+  Serial.print("\t");
+  ECG_VALUE = analogRead(ECG_PIN);
+  Serial.print(ECG_VALUE);
+  Serial.print("\t");
+  PPG_VALUE = analogRead(PPG_PIN);
+  Serial.println(PPG_VALUE);
+  //ECG_BUFF[SAMPLE_NO] = ECG_VALUE;
+  //PPG_BUFF[SAMPLE_NO] = PPG_VALUE;
+  SAMPLE_NO++;
+  if ( SAMPLE_NO == 2500 )
+  {
+    Timer1.detachInterrupt();
+  }
+}
