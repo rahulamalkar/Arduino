@@ -1,0 +1,156 @@
+#include <VirtualWire.h>
+#include <SPI.h>
+#include <SD.h>
+
+const int chipSelect = 4;
+const unsigned int buzzer_pin=10;
+
+
+byte message[VW_MAX_MESSAGE_LEN]; // a buffer to store the incoming messages 
+ byte messageLength = VW_MAX_MESSAGE_LEN; // the size of the message 
+unsigned int can_send=0;
+
+char str[70];
+char *test="$GPGGA";       
+char logitude[10];
+char latitude[10];
+int i,j,k;
+int temp;
+//int Ctrl+z=26;    //for sending msg
+void setup() 
+{
+  Serial.begin(9600);
+  Serial1.begin(9600);//GPS Module
+  Serial2.begin(9600);//GSM Module
+  Serial3.begin(9600);//xbee module
+  Serial.print("Initializing SD card...");
+  pinMode(SS, OUTPUT);
+  pinMode(buzzer_pin,OUTPUT);
+  digitalWrite(buzzer_pin,LOW);
+  delay(1000);
+  digitalWrite(buzzer_pin,HIGH);
+  delay(1000);
+  digitalWrite(buzzer_pin,LOW);
+  if (!SD.begin(chipSelect)) {
+    Serial.println("initialization failed!");
+    return;
+  }
+  Serial.println("initialization done.");
+  vw_setup(2000);
+ vw_rx_start();
+  Serial.println("Device is ready"); 
+}
+
+
+void loop() 
+{
+  if(vw_get_message(message, &messageLength))
+{
+  
+  Serial.print("Received: "); 
+ for (int i = 0; i < messageLength; i++) 
+ { 
+ Serial.write(message[i]); 
+ } 
+  can_send=1;
+  Serial.println("");
+}
+  if(temp==1 && can_send==1)
+  {
+    for(i=18;i<27;i++)          //extract latitude from string
+    {
+     latitude[j]=str[i];
+     j++;
+    }
+    for(i=30;i<40;i++)          //extract longitude from string
+    {
+    logitude[k]=str[i];
+     k++;
+    }
+    send_sms();
+    temp=0;
+    i=0;
+    j=0;
+    k=0;
+  }
+digitalWrite(buzzer_pin,LOW);
+}
+
+
+
+void serialEvent1()
+{
+  while (Serial1.available())            //Serial incomming data from GPS 
+  {
+    char inChar = (char)Serial1.read(); 
+    str[i]= inChar;                  //store incomming data from GPS to temparary string str[]
+     i++;
+     if (i < 7)                       
+     {
+      if(str[i-1] != test[i-1])         //check for right string
+      {
+        i=0; 
+      }
+     }
+    if(i >=60)
+    {
+     temp=1;
+    } 
+  }
+}
+
+
+
+void send_sms()
+{
+  capture_image();
+  Serial.println("Sending SMS...");
+  Serial2.println('\r');
+  delay(100);
+  //Serial2.println("AT+CRSL=0\r");
+  //delay(100);
+  Serial2.println("AT+CMGF=1\r");
+  delay(100);
+  Serial2.println("AT+CMGS=\"+919876543210\"\r");
+  delay(100);
+  Serial2.println("chain snatched\r");
+  Serial2.print("Latitude(N): ");             //enter latitude in msg
+  Serial2.println(latitude);                  //enter latitude value in msg
+  Serial2.print("Longitude(E): ");            //enter Longitude in Msg
+  Serial2.println(logitude);                  //enter longitude value in msg
+  delay(100);
+  Serial2.write(0x1A);
+  delay(100);
+  Serial.println("SMS Sent.");
+  print_xbee();
+}
+
+
+
+
+void print_xbee()
+{
+  File myFile;
+  myFile = SD.open("abc.jpg");
+  if (myFile) {
+    Serial.println("image transfer started...");
+    while (myFile.available()) {
+      Serial3.print(myFile.read());
+    }
+    myFile.close();
+    Serial.println("image transfered.");
+    can_send=0;
+    digitalWrite(buzzer_pin,LOW);
+  } else {
+    // if the file didn't open, print an error:
+    Serial.println("error opening image.");
+  }
+}
+
+
+void capture_image()
+{
+  digitalWrite(buzzer_pin,HIGH);
+  Serial.println("capturing the image.");
+  Serial.println("image captured.");
+}
