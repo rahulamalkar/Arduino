@@ -1,0 +1,62 @@
+int motor1_clock=3;
+int motor1_anticlk=4;
+int motor2_clock=5;
+int motor2_anticlk=6;
+int state;
+void setup()
+{
+  Serial.begin(9600);
+  pinMode(motor1_clock, OUTPUT);
+  pinMode(motor1_anticlk, OUTPUT);
+  pinMode(motor2_clock, OUTPUT);
+  pinMode(motor2_anticlk, OUTPUT);
+}
+void loop()
+{
+  if(Serial.available() > 0)
+  {     
+      state = Serial.read();
+  }  
+  
+if (state == 'F')
+{
+  Serial.println("ROBOT GOING FORWARD");
+  digitalWrite(motor1_clock, HIGH);
+  digitalWrite(motor1_anticlk, LOW);
+  digitalWrite(motor2_clock, HIGH);
+  digitalWrite(motor2_anticlk, LOW);
+}
+if (state == 'B')
+{
+  Serial.println("ROBOT GOING REVERSE");
+  digitalWrite(motor1_clock, LOW);
+  digitalWrite(motor1_anticlk, HIGH);
+  digitalWrite(motor2_clock, LOW);
+  digitalWrite(motor2_anticlk, HIGH);
+}
+if (state == 'L')
+{
+  Serial.println("ROBOT GOING LEFT");
+  digitalWrite(motor1_clock, LOW);
+  digitalWrite(motor1_anticlk, LOW);
+  digitalWrite(motor2_clock, HIGH);
+  digitalWrite(motor2_anticlk, LOW);
+}
+if (state == 'R')
+{
+  Serial.println("ROBOT GOING RIGHT");
+  digitalWrite(motor1_clock, HIGH);
+  digitalWrite(motor1_anticlk, LOW);
+  digitalWrite(motor2_clock, LOW);
+  digitalWrite(motor2_anticlk, LOW);
+}
+if (state == 'S')
+{
+  Serial.println("ROBOT GOING REST");
+  digitalWrite(motor1_clock, LOW);
+  digitalWrite(motor1_anticlk, LOW);
+  digitalWrite(motor2_clock, LOW);
+  digitalWrite(motor2_anticlk, LOW);
+}
+
+}
